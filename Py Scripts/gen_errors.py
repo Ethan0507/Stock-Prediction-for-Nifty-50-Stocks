@@ -38,14 +38,21 @@ def directional_asymmetry(y_hat, y_test):
 
 
 # Passing the path to the directory of the dataset
-os.chdir('C:/Users/User/Personal/Internship/Bennett University/Project/Dataset/30/CSV Files/')
+os.chdir('C:/Users/User/Personal/Internship/Bennett University/Project/SRC/Stock-Prediction-for-Nifty-50-Stocks/CSV Files')
 files = os.listdir()
 
 with open('../Errors.csv', 'w', newline='') as error_file:
     writer = csv.writer(error_file)
     writer.writerow('Stock,LSTM (MAE),SVR_Linear (MAE),SVR_Polynomial (MAE),SVR_Rbf (MAE),Random Forest (MAE),Gradient Boosting (MAE),LSTM (MSE),SVR_Linear (MSE),SVR_Polynomial (MSE),SVR_Rbf (MSE),Random Forest (MSE),Gradient Boosting (MSE),LSTM (Dir. Symm.),SVR_Linear (Dir. Symm.),SVR_Polynomial (Dir. Symm.),SVR_Rbf (Dir. Symm.),Random Forest (Dir. Symm.),Gradient Boosting (Dir. Symm.),Model'.split(','))
+
+
 # Running the models generated for each stock data
 for file in files:
+
+    # Create a CSV File to store predicted results
+    with open('../Predictions/' +file.split('_')[0]+ '.csv', 'w', newline='') as prediction_file:
+        writer = csv.writer(prediction_file)
+        writer.writerow('Real Price,LSTM,SVR_Linear,SVR_Polynomial,SVR_Rbf,Random Forest,Gradient Boosting'.split(','))
 
     # Read the csv file
     df = pd.read_csv(file, date_parser=True)
@@ -408,10 +415,17 @@ for file in files:
     for i in range(len(da)):
         mean_metric.append((scaled_mae[i] + scaled_mse[i] + scaled_da[i]) / 3)
 
+    # Saving predictions to a CSV File
+    with open('../Predictions/' +file.split('_')[0]+ '.csv', 'a+', newline='') as pred_file:
+        for i in range(test_size + 1):
+            writer = csv.writer(pred_file)
+            writer.writerow([y_test[i][0], y_hatLSTM[i][0], y_hat_lin[i][0], y_hat_poly[i][0], y_hat_rbf[i][0], y_hat_rfr[i][0], y_hat_gbr[i][0]])
+
     # Adding the error values to a CSV File
     with open('../Errors.csv', 'a+', newline='') as error_file:
         writer = csv.writer(error_file)
         writer.writerow([file.split('_')[0]] + scaled_mae.tolist() + scaled_mse.tolist() + ds +[models[mean_metric.index(min(mean_metric))]])
-    print(file + " predicted successfully!")
+    print(file.split('_')[0] + " predicted successfully!")
 
-print("\n\nERROR FILE GENERATED!!")
+
+print("\n\nFILES GENERATED!!")
